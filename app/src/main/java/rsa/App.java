@@ -1,10 +1,13 @@
 package rsa;
 
 import rsa.util.Utils;
+import rsa.worker.RsaThread;
 
+import java.io.FileNotFoundException;
 import java.util.Map;
 
 public class App {
+    static Thread.UncaughtExceptionHandler threadExceptionHandler = (t, e) -> System.err.println(e.getLocalizedMessage());
     public static void main(String[] args) {
         String suite, inFile, operation, outFile, keyFile;
         int keyLength = -1;
@@ -23,13 +26,18 @@ public class App {
             if(arguments.containsKey("keyLength")){
                 keyLength = Integer.parseInt(arguments.get("keyLength"));
             }
-
-            // TODO create and execute a RsaThread with the arguments provided
-
         } catch (Exception ex) {
             System.out.println("Error parsing arguments: " + ex.getMessage());
             showUsage();
             return;
+        }
+        try{
+            RsaThread rsaThread = new RsaThread(operation, suite, inFile, outFile, keyFile, keyLength);
+            rsaThread.setUncaughtExceptionHandler(threadExceptionHandler);
+            rsaThread.start();
+            rsaThread.join();
+        } catch (FileNotFoundException | InterruptedException e) {
+            System.err.println(e.getLocalizedMessage());
         }
     }
 
