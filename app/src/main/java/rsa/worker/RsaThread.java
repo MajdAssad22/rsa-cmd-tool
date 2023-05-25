@@ -24,32 +24,27 @@ public class RsaThread extends Thread{
     File keyFile;
     int keyLength;
 
-    public RsaThread(String operation, String suite, String inFilePath, String outFilePath, String keyFilePath, int keyLength) throws FileNotFoundException, IllegalArgumentException {
+    public RsaThread(String operation, String suite, String inFilePath, String outFilePath, String keyFilePath, int keyLength) throws FileNotFoundException, IllegalArgumentException, NullPointerException {
         ValidateAndStoreParams(suite, operation, inFilePath, outFilePath, keyFilePath, keyLength);
     }
 
     @Override
     public void run() {
-        // TODO the logic of encrypting / decrypting / generating a key
         try{
-            if (operation.equals("encrypt") || operation.equals("decrypt")) {
+            if (operation.equalsIgnoreCase("encrypt") || operation.equalsIgnoreCase("decrypt")) {
                 KeyPair pair = Utils.loadKey(keyFile.getPath());
                 Cipher cipher = Cipher.getInstance(suite);
-                byte[] data = Files.readAllBytes(Path.of(inFile.toURI()));
 
                 if (operation.equals("encrypt")) {
                     cipher.init(Cipher.ENCRYPT_MODE, pair.getPublic());
                     CipherStream(cipher, inFile, outFile);
-//                    byte[] cipheredData = cipher.doFinal(data);
-//                    File file = new File(outFile.toURI());
-//                    Files.write(file.toPath(), cipheredData);
+                    System.out.println("Encrypted successfully");
                 } else {
                     cipher.init(Cipher.DECRYPT_MODE, pair.getPrivate());
                     CipherStream(cipher, inFile, outFile);
-//                    byte[] cipheredData = cipher.doFinal(data);
-//                    Files.write(Path.of(outFile.toURI()), cipheredData);
+                    System.out.println("Decrypted successfully");
                 }
-            } else if (operation.equals("generateKey")) {
+            } else if (operation.equalsIgnoreCase("generateKey")) {
                 if (keyLength == -1) {
                     throw new IllegalArgumentException("KeyLength is missing");
                 } else {
@@ -57,6 +52,7 @@ public class RsaThread extends Thread{
                     generator.initialize(keyLength);
                     KeyPair pair = generator.generateKeyPair();
                     Utils.saveKey(keyFile.getPath(), (RSAPrivateKey) pair.getPrivate(), (RSAPublicKey) pair.getPublic());
+                    System.out.println("Key generated successfully");
                 }
             }
         } catch (NoSuchPaddingException | NoSuchAlgorithmException e) {
@@ -66,7 +62,7 @@ public class RsaThread extends Thread{
         }
     }
 
-    private void ValidateAndStoreParams(String suite, String operation, String inFilePath, String outFilePath, String keyFilePath, int keyLength) throws FileNotFoundException {
+    private void ValidateAndStoreParams(String suite, String operation, String inFilePath, String outFilePath, String keyFilePath, int keyLength) throws FileNotFoundException,IllegalArgumentException,NullPointerException {
         // Key file
         try{
             this.keyFile = new File(keyFilePath);
@@ -95,7 +91,7 @@ public class RsaThread extends Thread{
             }
 
             // Suite
-            if (!suite.equalsIgnoreCase("RSA/ECB/PKCS1Padding") && !suite.equalsIgnoreCase("RSA/ECB/OAEPWithSHA-256AndMGF1Padding")) {
+            if (suite == null || ( !suite.equalsIgnoreCase("RSA/ECB/PKCS1Padding") && !suite.equalsIgnoreCase("RSA/ECB/OAEPWithSHA-256AndMGF1Padding"))) {
                 throw new IllegalArgumentException("Suite must be RSA/ECB/PKCS1Padding or RSA/ECB/OAEPWithSHA-256AndMGF1Padding");
             }
             this.suite = suite;

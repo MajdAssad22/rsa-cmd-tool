@@ -36,7 +36,7 @@ public class App {
             rsaThread.setUncaughtExceptionHandler(threadExceptionHandler);
             rsaThread.start();
             rsaThread.join();
-        } catch (FileNotFoundException | InterruptedException e) {
+        } catch (Exception e) {
             System.err.println(e.getLocalizedMessage());
         }
     }
